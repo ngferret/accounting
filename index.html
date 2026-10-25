@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pink Budget">
+<meta name="theme-color" content="#e8457f">
+<title>Pink Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: one narrow phone column; the ring is the hero, the add form sits under it, history below. */
+:root {
+  --bg: #fff5f8;
+  --surface: #ffffff;
+  --fg: #3b1f2b;
+  --muted: #8a6573;
+  --line: #f6d3df;
+  --pink: #e8457f;
+  --pink-soft: #fbd4e2;
+  --warn: #e07b16;
+  --over: #d42a3a;
+  --font-display: "Fredoka", "Nunito", ui-rounded, system-ui, sans-serif;
+  --font-body: "Nunito", ui-rounded, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1f1219; --surface: #2b1922; --fg: #fbe9f0; --muted: #c79cad;
+    --line: #47283a; --pink: #ff6fa3; --pink-soft: #4a2236;
+    --warn: #ffa64d; --over: #ff6b78; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1f1219; --surface: #2b1922; --fg: #fbe9f0; --muted: #c79cad;
+  --line: #47283a; --pink: #ff6fa3; --pink-soft: #4a2236;
+  --warn: #ffa64d; --over: #ff6b78; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.app { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.6rem; margin: 0; color: var(--pink); }
+.month { color: var(--muted); font-size: .85rem; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.ghost { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 999px; padding: 6px 14px; font-size: .85rem; }
+
+.ring-wrap { position: relative; width: min(260px, 72vw); aspect-ratio: 1; max-width: 100%; margin: 0 auto; }
+.ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--pink-soft); stroke-width: 16; }
+.ring-bar { fill: none; stroke: var(--pink); stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset .5s ease, stroke .3s; }
+.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; }
+.spent { font-family: var(--font-display); font-weight: 600; font-size: clamp(2rem, 9vw, 2.6rem); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.of { color: var(--muted); font-size: .9rem; }
+.left { font-weight: 700; color: var(--pink); margin-top: 4px; }
+.pct { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+.banner { border-radius: 14px; padding: 12px 14px; font-weight: 600; display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; border: 1px solid currentColor; background: var(--surface); }
+.banner.warn { color: var(--warn); }
+.banner.over { color: var(--over); }
+.banner button { background: none; border: none; color: inherit; font-size: 1.2rem; line-height: 1; padding: 0 2px; }
+
+form.add { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.amount-row { display: flex; align-items: center; gap: 6px; border-bottom: 2px solid var(--pink-soft); }
+.amount-row span { font-family: var(--font-display); font-size: 1.6rem; color: var(--muted); }
+#amount { flex: 1; min-width: 0; border: none; background: none; color: var(--fg); font-family: var(--font-display); font-size: 1.8rem; padding: 4px 0; font-variant-numeric: tabular-nums; }
+#amount:focus-visible { outline: none; }
+.amount-row:focus-within { border-color: var(--pink); }
+#note { border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 12px; padding: 10px 12px; font: inherit; width: 100%; }
+.primary { background: var(--pink); color: #fff; border: none; border-radius: 999px; padding: 12px; font-weight: 700; font-size: 1rem; }
+.primary:disabled { opacity: .45; cursor: default; }
+
+h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; margin: 0 0 8px; }
+ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+li .info { flex: 1; min-width: 0; }
+li .what { font-weight: 600; overflow-wrap: anywhere; }
+li .when { font-size: .8rem; color: var(--muted); }
+li .amt { font-variant-numeric: tabular-nums; font-weight: 700; }
+li .del { background: none; border: none; color: var(--muted); font-size: 1.1rem; padding: 4px 6px; border-radius: 8px; }
+.empty { color: var(--muted); padding: 10px 0; }
+.example { font-size: .8rem; color: var(--muted); margin-top: 8px; }
+
+dialog { border: none; border-radius: 20px; padding: 20px; background: var(--surface); color: var(--fg); width: min(360px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgba(40, 10, 25, .45); }
+dialog h3 { font-family: var(--font-display); font-weight: 600; margin: 0 0 12px; color: var(--pink); }
+dialog label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+#budgetInput, #startInput { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 1.1rem; }
+.dlg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+.danger { background: none; border: 1px solid var(--over); color: var(--over); border-radius: 999px; padding: 8px 14px; }
+.reset-zone { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.hint { font-size: .8rem; color: var(--muted); }
+.banner.note { color: var(--pink); }
+.amt.ok { color: var(--pink); }
+.amt.bad { color: var(--over); }
+@media (prefers-reduced-motion: reduce) { .ring-bar { transition: none; } }
+</style>
+
+<style>body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Pink Budget</h1>
+      <div class="month" id="month"></div>
+    </div>
+    <button class="ghost" id="openSettings" type="button">Set budget</button>
+  </header>
+
+  <div class="ring-wrap" aria-live="polite">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="ring-track" cx="100" cy="100" r="84"></circle>
+      <circle class="ring-bar" id="bar" cx="100" cy="100" r="84"></circle>
+    </svg>
+    <div class="ring-center">
+      <div class="pct" id="pct">0% used</div>
+      <div class="spent" id="spent">$0</div>
+      <div class="of" id="of">of $500</div>
+      <div class="left" id="left">$500 left</div>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" hidden>
+    <span id="bannerText"></span>
+    <button type="button" id="closeBanner" aria-label="Dismiss">×</button>
+  </div>
+
+  <form class="add" id="addForm" autocomplete="off">
+    <div class="amount-row">
+      <span id="currencySign">$</span>
+      <input id="amount" inputmode="decimal" placeholder="0.00" aria-label="Amount spent">
+    </div>
+    <input id="note" placeholder="What was it? (optional)" aria-label="What was it">
+    <button class="primary" id="addBtn" type="submit" disabled>Add spending</button>
+  </form>
+
+  <section>
+    <h2>This period</h2>
+    <ul id="list"></ul>
+    <div class="example" id="exampleNote" hidden>These are example entries. Add your first real one and they'll disappear.</div>
+  </section>
+
+  <section id="pastSection" hidden>
+    <h2>Past 2-week periods</h2>
+    <ul id="past"></ul>
+  </section>
+</div>
+
+<dialog id="settings">
+  <h3>Your budget</h3>
+  <label for="budgetInput">Budget for each 2 weeks</label>
+  <input id="budgetInput" inputmode="decimal">
+  <label for="startInput" style="margin-top:12px">Current period started on</label>
+  <input id="startInput" type="date">
+  <div class="dlg-actions">
+    <button class="ghost" type="button" id="cancelSettings">Cancel</button>
+    <button class="primary" type="button" id="saveSettings" style="padding:8px 18px">Save</button>
+  </div>
+  <div class="reset-zone">
+    <span class="hint">Want to start fresh before the 2 weeks are up? This saves what you have so far to your past periods.</span>
+    <button class="danger" type="button" id="resetBtn">Start a new period now</button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  const WARN = 0.8;
+  const CIRC = 2 * Math.PI * 84;
+  const LS_KEY = "pink-budget-v1";
+  const fmt = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
+  const money = v => fmt.format(v);
+
+  const EXAMPLES = [
+    { id: "ex1", amount: 6.5, note: "Iced latte", date: Date.now() - 3600e3 },
+    { id: "ex2", amount: 42.18, note: "Groceries", date: Date.now() - 86400e3 },
+    { id: "ex3", amount: 15, note: "Movie ticket", date: Date.now() - 2 * 86400e3 }
+  ];
+
+  let state = { budget: 500, expenses: [], start: dayStart(Date.now()), history: [] };
+  let showingExamples = true;
+  let stateDoc = null;
+  let saving = Promise.resolve();
+
+  const $ = id => document.getElementById(id);
+  const bar = $("bar");
+  bar.style.strokeDasharray = CIRC;
+
+  function dayStart(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  function addDays(t, n) { const d = new Date(t); d.setDate(d.getDate() + n); return d.getTime(); }
+  function fmtDay(t) { return new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" }); }
+  function toInputDate(t) { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+
+  // Saves the entries before `cutoff` as one finished period, then removes them from the active list.
+  function archivePeriod(cutoff, lastDay) {
+    const mine = state.expenses.filter(e => e.date < cutoff);
+    if (!mine.length) return null;
+    const rec = { start: state.start, end: lastDay, budget: state.budget, spent: spentOf(mine), count: mine.length };
+    state.history.unshift(rec);
+    state.history = state.history.slice(0, 52);
+    state.expenses = state.expenses.filter(e => e.date >= cutoff);
+    return rec;
+  }
+
+  // Starts a new 14-day period whenever the current one has ended.
+  function rollover() {
+    let changed = false, last = null;
+    while (Date.now() >= addDays(state.start, 14)) {
+      const end = addDays(state.start, 14);
+      const rec = archivePeriod(end, addDays(state.start, 13));
+      if (rec) last = rec;
+      state.start = end;
+      changed = true;
+    }
+    if (last) {
+      showBanner("note", "A new 2-week period started. Last period you spent " + money(last.spent) + " of " + money(last.budget) + ".");
+    }
+    return changed;
+  }
+
+  function renderHistory() {
+    const sec = $("pastSection"), ul = $("past");
+    ul.textContent = "";
+    sec.hidden = !state.history.length;
+    state.history.forEach(h => {
+      const li = document.createElement("li");
+      const info = document.createElement("div"); info.className = "info";
+      const what = document.createElement("div"); what.className = "what"; what.textContent = fmtDay(h.start) + " – " + fmtDay(h.end);
+      const when = document.createElement("div"); when.className = "when";
+      const diff = h.budget - h.spent;
+      when.textContent = h.count + (h.count === 1 ? " entry" : " entries") + " · " + (diff >= 0 ? money(diff) + " under budget" : money(-diff) + " over budget");
+      info.append(what, when);
+      const amt = document.createElement("div"); amt.className = "amt " + (diff >= 0 ? "ok" : "bad");
+      amt.textContent = money(h.spent) + " / " + money(h.budget);
+      li.append(info, amt);
+      ul.appendChild(li);
+    });
+  }
+
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+
+  function parseAmount(t) {
+    const v = parseFloat(String(t).replace(/[^0-9.,]/g, "").replace(",", "."));
+    return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
+  }
+
+  function current() {
+    return showingExamples && state.expenses.length === 0 ? EXAMPLES : state.expenses;
+  }
+  function spentOf(list) { return list.reduce((s, e) => s + e.amount, 0); }
+
+  function render() {
+    if (rollover()) persist();
+    const list = current();
+    const spent = spentOf(list);
+    const p = state.budget > 0 ? spent / state.budget : 0;
+    const color = p >= 1 ? "var(--over)" : p >= WARN ? "var(--warn)" : "var(--pink)";
+    bar.style.stroke = color;
+    bar.style.strokeDashoffset = CIRC * (1 - Math.min(p, 1));
+    $("spent").textContent = money(spent);
+    $("of").textContent = "of " + money(state.budget);
+    const rem = state.budget - spent;
+    $("left").textContent = rem >= 0 ? money(rem) + " left" : money(-rem) + " over";
+    $("left").style.color = color;
+    $("pct").textContent = Math.round(p * 100) + "% used";
+    const daysLeft = Math.max(1, Math.ceil((addDays(state.start, 14) - Date.now()) / 86400e3));
+    $("month").textContent = fmtDay(state.start) + " – " + fmtDay(addDays(state.start, 13)) + " · " + daysLeft + (daysLeft === 1 ? " day" : " days") + " left";
+    renderHistory();
+
+    const ul = $("list");
+    ul.textContent = "";
+    if (!list.length) {
+      const li = document.createElement("div");
+      li.className = "empty";
+      li.textContent = "Nothing spent yet. Add an amount above.";
+      ul.appendChild(li);
+    }
+    const isEx = list === EXAMPLES;
+    $("exampleNote").hidden = !isEx;
+    list.forEach(e => {
+      const li = document.createElement("li");
+      const info = document.createElement("div"); info.className = "info";
+      const what = document.createElement("div"); what.className = "what"; what.textContent = e.note || "Spending";
+      const when = document.createElement("div"); when.className = "when";
+      when.textContent = new Date(e.date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+      info.append(what, when);
+      const amt = document.createElement("div"); amt.className = "amt"; amt.textContent = money(e.amount);
+      li.append(info, amt);
+      if (!isEx) {
+        const del = document.createElement("button");
+        del.type = "button"; del.className = "del"; del.textContent = "×";
+        del.setAttribute("aria-label", "Delete " + (e.note || "entry"));
+        del.onclick = () => { state.expenses = state.expenses.filter(x => x.id !== e.id); persist(); render(); };
+        li.appendChild(del);
+      }
+      ul.appendChild(li);
+    });
+  }
+
+  function showBanner(kind, text) {
+    const b = $("banner");
+    b.className = "banner " + kind;
+    $("bannerText").textContent = text;
+    b.hidden = false;
+  }
+  $("closeBanner").onclick = () => { $("banner").hidden = true; };
+
+  function persist() {
+    const snapshot = JSON.parse(JSON.stringify(state));
+    try { localStorage.setItem(LS_KEY, JSON.stringify(snapshot)); } catch (e) {}
+    if (stateDoc) {
+      saving = saving.then(() => stateDoc.set(snapshot)).catch(() => {});
+    }
+  }
+
+  $("amount").addEventListener("input", () => { $("addBtn").disabled = parseAmount($("amount").value) === null; });
+
+  $("addForm").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const amount = parseAmount($("amount").value);
+    if (amount === null) return;
+    showingExamples = false;
+    const before = state.budget > 0 ? spentOf(state.expenses) / state.budget : 0;
+    state.expenses.unshift({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      amount, note: $("note").value.trim(), date: Date.now()
+    });
+    const spent = spentOf(state.expenses);
+    const after = state.budget > 0 ? spent / state.budget : 0;
+    if (before < 1 && after >= 1) {
+      showBanner("over", "You've gone over your budget by " + money(spent - state.budget) + ".");
+    } else if (before < WARN && after >= WARN) {
+      showBanner("warn", "Heads up: you've used " + Math.round(after * 100) + "% of your budget. " + money(state.budget - spent) + " left.");
+    }
+    $("amount").value = ""; $("note").value = ""; $("addBtn").disabled = true;
+    $("amount").blur();
+    persist(); render();
+  });
+
+  const dlg = $("settings");
+  let resetArmed = false;
+  $("openSettings").onclick = () => {
+    $("budgetInput").value = state.budget.toFixed(2);
+    $("startInput").value = toInputDate(state.start);
+    resetArmed = false; $("resetBtn").textContent = "Start a new period now";
+    dlg.showModal();
+  };
+  $("cancelSettings").onclick = () => dlg.close();
+  $("saveSettings").onclick = () => {
+    const v = parseAmount($("budgetInput").value);
+    if (v !== null) state.budget = v;
+    const sd = $("startInput").value;
+    if (sd) { const p = sd.split("-").map(Number); state.start = new Date(p[0], p[1] - 1, p[2]).getTime(); }
+    persist(); render();
+    dlg.close();
+  };
+  $("resetBtn").onclick = () => {
+    if (!resetArmed) { resetArmed = true; $("resetBtn").textContent = "Tap again to start a new period"; return; }
+    archivePeriod(Date.now() + 1, dayStart(Date.now()));
+    state.start = dayStart(Date.now()); showingExamples = false; $("banner").hidden = true;
+    persist(); render(); dlg.close();
+  };
+
+  function load(obj) {
+    if (!obj || typeof obj !== "object") return false;
+    state.budget = typeof obj.budget === "number" && obj.budget > 0 ? obj.budget : 500;
+    state.expenses = Array.isArray(obj.expenses) ? obj.expenses.filter(e => e && typeof e.amount === "number") : [];
+    state.start = typeof obj.start === "number" ? obj.start : dayStart(Date.now());
+    state.history = Array.isArray(obj.history) ? obj.history : [];
+    if (state.expenses.length || state.history.length || obj.started) showingExamples = false;
+    return true;
+  }
+
+  try { load(JSON.parse(localStorage.getItem(LS_KEY) || "null")); } catch (e) {}
+  render();
+
+})();
+</script>
+</body>
+</html>
